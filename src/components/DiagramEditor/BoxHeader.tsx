@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Link2, Unlink } from 'lucide-react';
+import { X, Link2, Unlink, GripVertical } from 'lucide-react';
 
 interface BoxHeaderProps {
   id: string;
@@ -10,6 +10,7 @@ interface BoxHeaderProps {
   onDelete: (id: string) => void;
   onConnectionClick: (id: string) => void;
   onResetConnections: (id: string) => void;
+  dragHandleProps?: any;
 }
 
 const BoxHeader: React.FC<BoxHeaderProps> = ({
@@ -21,28 +22,34 @@ const BoxHeader: React.FC<BoxHeaderProps> = ({
   onDelete,
   onConnectionClick,
   onResetConnections,
+  dragHandleProps,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
 
   return (
     <div className="p-3 bg-editor-box-bg border-b-2 border-editor-box-border rounded-t-lg">
       <div className="flex items-center justify-between">
-        {isEditing ? (
-          <input
-            className="w-full px-2 py-1 border rounded"
-            value={title}
-            onChange={(e) => onUpdate(id, { title: e.target.value })}
-            onBlur={() => setIsEditing(false)}
-            autoFocus
-          />
-        ) : (
-          <h3
-            className="font-semibold text-editor-box-title cursor-text"
-            onClick={() => setIsEditing(true)}
-          >
-            {title}
-          </h3>
-        )}
+        <div className="flex items-center gap-2">
+          <div {...dragHandleProps} className="cursor-grab hover:bg-gray-100 p-1 rounded">
+            <GripVertical size={16} className="text-gray-500" />
+          </div>
+          {isEditing ? (
+            <input
+              className="w-full px-2 py-1 border rounded"
+              value={title}
+              onChange={(e) => onUpdate(id, { title: e.target.value })}
+              onBlur={() => setIsEditing(false)}
+              autoFocus
+            />
+          ) : (
+            <h3
+              className="font-semibold text-editor-box-title cursor-text"
+              onClick={() => setIsEditing(true)}
+            >
+              {title}
+            </h3>
+          )}
+        </div>
         <div className="flex items-center gap-1">
           {isConnectorMode && (
             <>

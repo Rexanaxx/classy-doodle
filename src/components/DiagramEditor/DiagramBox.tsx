@@ -36,7 +36,7 @@ const DiagramBox: React.FC<DiagramBoxProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const boxRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleDragStart = (e: React.MouseEvent) => {
     if (isConnectorMode) return;
     setIsDragging(true);
     setDragStart({
@@ -75,7 +75,7 @@ const DiagramBox: React.FC<DiagramBoxProps> = ({
       className={cn(
         "absolute bg-white border-2 border-editor-box-border rounded-lg shadow-lg min-w-[200px]",
         "transition-shadow duration-200",
-        isDragging ? "shadow-xl cursor-grabbing" : "cursor-grab",
+        isDragging && "shadow-xl",
         "animate-fade-in",
         isPendingConnection && "ring-2 ring-blue-500"
       )}
@@ -93,6 +93,9 @@ const DiagramBox: React.FC<DiagramBoxProps> = ({
         onDelete={onDelete}
         onConnectionClick={onConnectionClick}
         onResetConnections={onResetConnections}
+        dragHandleProps={{
+          onMouseDown: handleDragStart,
+        }}
       />
       <BoxSection
         title="Attributes"
