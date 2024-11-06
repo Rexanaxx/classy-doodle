@@ -25,7 +25,6 @@ const DiagramConnector: React.FC<DiagramConnectorProps> = ({
   const [path, setPath] = useState('');
 
   useEffect(() => {
-    // Calculate the control points for the curved path
     const dx = endPoint.x - startPoint.x;
     const dy = endPoint.y - startPoint.y;
     const controlPoint1 = {
@@ -37,7 +36,6 @@ const DiagramConnector: React.FC<DiagramConnectorProps> = ({
       y: endPoint.y,
     };
 
-    // Create the SVG path
     const pathData = `
       M ${startPoint.x},${startPoint.y}
       C ${controlPoint1.x},${controlPoint1.y}
@@ -85,7 +83,6 @@ const DiagramConnector: React.FC<DiagramConnectorProps> = ({
     };
   }, [isDragging]);
 
-  // Calculate arrow markers
   const getArrowPoints = (point: Point, isStart: boolean) => {
     const angle = Math.atan2(
       endPoint.y - startPoint.y,
@@ -114,10 +111,9 @@ const DiagramConnector: React.FC<DiagramConnectorProps> = ({
 
   return (
     <svg
-      className="absolute inset-0 pointer-events-none"
-      style={{ zIndex: 0 }}
+      className="fixed inset-0 w-full h-full pointer-events-none"
+      style={{ zIndex: 40 }}
     >
-      {/* Main connector path */}
       <path
         d={path}
         fill="none"
@@ -126,7 +122,6 @@ const DiagramConnector: React.FC<DiagramConnectorProps> = ({
         className="text-editor-connector-line"
       />
 
-      {/* Arrow markers */}
       <path
         d={`M ${startArrow[0].x},${startArrow[0].y} L ${startArrow[1].x},${startArrow[1].y} L ${startArrow[2].x},${startArrow[2].y} Z`}
         fill="currentColor"
@@ -138,7 +133,6 @@ const DiagramConnector: React.FC<DiagramConnectorProps> = ({
         className="text-editor-connector-line"
       />
 
-      {/* Draggable handles */}
       <circle
         cx={startPoint.x}
         cy={startPoint.y}
