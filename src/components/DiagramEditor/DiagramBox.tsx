@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, GripVertical, Plus } from 'lucide-react';
+import { X, GripVertical, Plus, Link2, Unlink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface DiagramBoxProps {
@@ -8,9 +8,13 @@ interface DiagramBoxProps {
   attributes: string[];
   methods: string[];
   position: { x: number; y: number };
+  isConnectorMode: boolean;
+  isPendingConnection: boolean;
   onMove: (id: string, newPosition: { x: number; y: number }) => void;
   onUpdate: (id: string, data: { title?: string; attributes?: string[]; methods?: string[] }) => void;
   onDelete: (id: string) => void;
+  onConnectionClick: (id: string) => void;
+  onResetConnections: (id: string) => void;
 }
 
 const DiagramBox: React.FC<DiagramBoxProps> = ({
@@ -19,9 +23,13 @@ const DiagramBox: React.FC<DiagramBoxProps> = ({
   attributes,
   methods,
   position,
+  isConnectorMode,
+  isPendingConnection,
   onMove,
   onUpdate,
   onDelete,
+  onConnectionClick,
+  onResetConnections,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -29,6 +37,7 @@ const DiagramBox: React.FC<DiagramBoxProps> = ({
   const boxRef = useRef<HTMLDivElement>(null);
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (isConnectorMode) return;
     setIsDragging(true);
     setDragStart({
       x: e.clientX - position.x,
@@ -88,7 +97,8 @@ const DiagramBox: React.FC<DiagramBoxProps> = ({
         "absolute bg-white border-2 border-editor-box-border rounded-lg shadow-lg min-w-[200px]",
         "transition-shadow duration-200",
         isDragging ? "shadow-xl cursor-grabbing" : "cursor-grab",
-        "animate-fade-in"
+        "animate-fade-in",
+        isPendingConnection && "ring-2 ring-blue-500"
       )}
       style={{
         left: `${position.x}px`,
@@ -100,22 +110,40 @@ const DiagramBox: React.FC<DiagramBoxProps> = ({
         className="p-3 bg-editor-box-bg border-b-2 border-editor-box-border rounded-t-lg"
         onMouseDown={handleMouseDown}
       >
-        {isEditing ? (
-          <input
-            className="w-full px-2 py-1 border rounded"
-            value={title}
-            onChange={(e) => onUpdate(id, { title: e.target.value })}
-            onBlur={() => setIsEditing(false)}
-            autoFocus
-          />
-        ) : (
-          <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between">
+          {isEditing ? (
+            <input
+              className="w-full px-2 py-1 border rounded"
+              value={title}
+              onChange={(e) => onUpdate(id, { title: e.target.value })}
+              onBlur={() => setIsEditing(false)}
+              autoFocus
+            />
+          ) : (
             <h3
               className="font-semibold text-editor-box-title cursor-text"
               onClick={() => setIsEditing(true)}
             >
               {title}
             </h3>
+          )}
+          <div className="flex items-center gap-1">
+            {isConnectorMode && (
+              <>
+                <button
+                  onClick={() => onConnectionClick(id)}
+                  className="p-1 hover:bg-blue-100 rounded-full transition-colors"
+                >
+                  <Link2 size={16} className={cn("text-blue-500", isPendingConnection && "text-blue-700")} />
+                </button>
+                <button
+                  onClick={() => onResetConnections(id)}
+                  className="p-1 hover:bg-red-100 rounded-full transition-colors"
+                >
+                  <Unlink size={16} className="text-red-500" />
+                </button>
+              </>
+            )}
             <button
               onClick={() => onDelete(id)}
               className="p-1 hover:bg-red-100 rounded-full transition-colors"
@@ -123,7 +151,7 @@ const DiagramBox: React.FC<DiagramBoxProps> = ({
               <X size={16} className="text-red-500" />
             </button>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Attributes Section */}

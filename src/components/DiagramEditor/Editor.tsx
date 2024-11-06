@@ -13,6 +13,8 @@ interface Box {
 
 interface Connector {
   id: string;
+  startBoxId: string;
+  endBoxId: string;
   startPoint: { x: number; y: number };
   endPoint: { x: number; y: number };
 }
@@ -20,8 +22,8 @@ interface Connector {
 const Editor: React.FC = () => {
   const [boxes, setBoxes] = useState<Box[]>([]);
   const [connectors, setConnectors] = useState<Connector[]>([]);
-  const [isCreatingConnector, setIsCreatingConnector] = useState(false);
-  const [tempConnector, setTempConnector] = useState<Connector | null>(null);
+  const [isConnectorMode, setIsConnectorMode] = useState(false);
+  const [pendingConnection, setPendingConnection] = useState<string | null>(null);
 
   const handleAddBox = () => {
     const newBox: Box = {
@@ -38,6 +40,22 @@ const Editor: React.FC = () => {
     setBoxes(boxes.map(box => 
       box.id === id ? { ...box, position: newPosition } : box
     ));
+
+    // Update connector positions
+    setConnectors(connectors.map(conn => {
+      if (conn.startBoxId === id || conn.endBoxId === id) {
+        const startBox = boxes.find(b => b.id === conn.startBoxId);
+        const endBox = boxes.find(b => b.id === conn.endBoxId);
+        if (startBox && endBox) {
+          return {
+            ...conn,
+            startPoint: conn.startBoxId === id ? newPosition : conn.startPoint,
+            endPoint: conn.endBoxId === id ? newPosition : conn.endPoint,
+          };
+        }
+      }
+      return conn;
+    }));
   };
 
   const handleBoxUpdate = (
@@ -51,56 +69,38 @@ const Editor: React.FC = () => {
 
   const handleBoxDelete = (id: string) => {
     setBoxes(boxes.filter(box => box.id !== id));
-    // Remove associated connectors
-    setConnectors(connectors.filter(conn =>
-      !conn.id.includes(id)
+    setConnectors(connectors.filter(conn => 
+      conn.startBoxId !== id && conn.endBoxId !== id
     ));
   };
 
-  const handleStartConnector = () => {
-    setIsCreatingConnector(true);
-  };
+  const handleConnectionClick = (boxId: string) => {
+    if (!isConnectorMode) return;
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!isCreatingConnector) return;
-
-    const newConnector: Connector = {
-      id: `connector-${Date.now()}`,
-      startPoint: { x: e.clientX, y: e.clientY },
-      endPoint: { x: e.clientX, y: e.clientY },
-    };
-    setTempConnector(newConnector);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!tempConnector) return;
-
-    setTempConnector({
-      ...tempConnector,
-      endPoint: { x: e.clientX, y: e.clientY },
-    });
-  };
-
-  const handleMouseUp = () => {
-    if (tempConnector) {
-      setConnectors([...connectors, tempConnector]);
-      setTempConnector(null);
+    if (!pendingConnection) {
+      setPendingConnection(boxId);
+    } else if (pendingConnection !== boxId) {
+      const startBox = boxes.find(b => b.id === pendingConnection);
+      const endBox = boxes.find(b => b.id === boxId);
+      
+      if (startBox && endBox) {
+        const newConnector: Connector = {
+          id: `connector-${Date.now()}`,
+          startBoxId: pendingConnection,
+          endBoxId: boxId,
+          startPoint: startBox.position,
+          endPoint: endBox.position,
+        };
+        setConnectors([...connectors, newConnector]);
+      }
+      setPendingConnection(null);
     }
-    setIsCreatingConnector(false);
   };
 
-  const handleConnectorUpdate = (
-    id: string,
-    startPoint: { x: number; y: number },
-    endPoint: { x: number; y: number }
-  ) => {
-    setConnectors(connectors.map(conn =>
-      conn.id === id ? { ...conn, startPoint, endPoint } : conn
+  const handleResetConnections = (boxId: string) => {
+    setConnectors(connectors.filter(conn => 
+      conn.startBoxId !== boxId && conn.endBoxId !== boxId
     ));
-  };
-
-  const handleConnectorDelete = (id: string) => {
-    setConnectors(connectors.filter(conn => conn.id !== id));
   };
 
   return (
@@ -110,22 +110,27 @@ const Editor: React.FC = () => {
         backgroundImage: 'radial-gradient(circle at 1px 1px, var(--tw-colors-editor-grid) 1px, transparent 0)',
         backgroundSize: '40px 40px',
       }}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
     >
       <Toolbar
         onAddBox={handleAddBox}
-        onAddConnector={handleStartConnector}
+        isConnectorMode={isConnectorMode}
+        onToggleConnectorMode={() => {
+          setIsConnectorMode(!isConnectorMode);
+          setPendingConnection(null);
+        }}
       />
 
       {boxes.map(box => (
         <DiagramBox
           key={box.id}
           {...box}
+          isConnectorMode={isConnectorMode}
+          isPendingConnection={pendingConnection === box.id}
           onMove={handleBoxMove}
           onUpdate={handleBoxUpdate}
           onDelete={handleBoxDelete}
+          onConnectionClick={handleConnectionClick}
+          onResetConnections={handleResetConnections}
         />
       ))}
 
@@ -133,18 +138,10 @@ const Editor: React.FC = () => {
         <DiagramConnector
           key={connector.id}
           {...connector}
-          onUpdate={handleConnectorUpdate}
-          onDelete={handleConnectorDelete}
-        />
-      ))}
-
-      {tempConnector && (
-        <DiagramConnector
-          {...tempConnector}
           onUpdate={() => {}}
           onDelete={() => {}}
         />
-      )}
+      ))}
     </div>
   );
 };
