@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { X, GripVertical, Plus, Link2, Unlink } from 'lucide-react';
+import BoxHeader from './BoxHeader';
+import BoxSection from './BoxSection';
 import { cn } from '@/lib/utils';
 
 interface DiagramBoxProps {
@@ -33,7 +34,6 @@ const DiagramBox: React.FC<DiagramBoxProps> = ({
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [isEditing, setIsEditing] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -47,12 +47,10 @@ const DiagramBox: React.FC<DiagramBoxProps> = ({
 
   const handleMouseMove = (e: MouseEvent) => {
     if (!isDragging) return;
-    
     const newPosition = {
       x: e.clientX - dragStart.x,
       y: e.clientY - dragStart.y,
     };
-    
     onMove(id, newPosition);
   };
 
@@ -71,25 +69,6 @@ const DiagramBox: React.FC<DiagramBoxProps> = ({
     };
   }, [isDragging]);
 
-  const addItem = (type: 'attributes' | 'methods') => {
-    const items = type === 'attributes' ? attributes : methods;
-    const newItem = `New ${type === 'attributes' ? 'Attribute' : 'Method'}`;
-    onUpdate(id, { [type]: [...items, newItem] });
-  };
-
-  const updateItem = (type: 'attributes' | 'methods', index: number, value: string) => {
-    const items = type === 'attributes' ? attributes : methods;
-    const newItems = [...items];
-    newItems[index] = value;
-    onUpdate(id, { [type]: newItems });
-  };
-
-  const deleteItem = (type: 'attributes' | 'methods', index: number) => {
-    const items = type === 'attributes' ? attributes : methods;
-    const newItems = items.filter((_, i) => i !== index);
-    onUpdate(id, { [type]: newItems });
-  };
-
   return (
     <div
       ref={boxRef}
@@ -105,116 +84,44 @@ const DiagramBox: React.FC<DiagramBoxProps> = ({
         top: `${position.y}px`,
       }}
     >
-      {/* Title Section */}
-      <div
-        className="p-3 bg-editor-box-bg border-b-2 border-editor-box-border rounded-t-lg"
-        onMouseDown={handleMouseDown}
-      >
-        <div className="flex items-center justify-between">
-          {isEditing ? (
-            <input
-              className="w-full px-2 py-1 border rounded"
-              value={title}
-              onChange={(e) => onUpdate(id, { title: e.target.value })}
-              onBlur={() => setIsEditing(false)}
-              autoFocus
-            />
-          ) : (
-            <h3
-              className="font-semibold text-editor-box-title cursor-text"
-              onClick={() => setIsEditing(true)}
-            >
-              {title}
-            </h3>
-          )}
-          <div className="flex items-center gap-1">
-            {isConnectorMode && (
-              <>
-                <button
-                  onClick={() => onConnectionClick(id)}
-                  className="p-1 hover:bg-blue-100 rounded-full transition-colors"
-                >
-                  <Link2 size={16} className={cn("text-blue-500", isPendingConnection && "text-blue-700")} />
-                </button>
-                <button
-                  onClick={() => onResetConnections(id)}
-                  className="p-1 hover:bg-red-100 rounded-full transition-colors"
-                >
-                  <Unlink size={16} className="text-red-500" />
-                </button>
-              </>
-            )}
-            <button
-              onClick={() => onDelete(id)}
-              className="p-1 hover:bg-red-100 rounded-full transition-colors"
-            >
-              <X size={16} className="text-red-500" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Attributes Section */}
-      <div className="border-b-2 border-editor-box-border">
-        <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
-          <span className="text-sm font-medium text-editor-box-text">Attributes</span>
-          <button
-            onClick={() => addItem('attributes')}
-            className="p-1 hover:bg-gray-200 rounded-full transition-colors"
-          >
-            <Plus size={16} className="text-editor-box-text" />
-          </button>
-        </div>
-        <ul className="p-2 space-y-1">
-          {attributes.map((attr, index) => (
-            <li key={index} className="flex items-center gap-2">
-              <GripVertical size={16} className="text-gray-400" />
-              <input
-                className="flex-1 px-2 py-1 text-sm border rounded hover:border-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-                value={attr}
-                onChange={(e) => updateItem('attributes', index, e.target.value)}
-              />
-              <button
-                onClick={() => deleteItem('attributes', index)}
-                className="p-1 hover:bg-red-100 rounded-full transition-colors"
-              >
-                <X size={14} className="text-red-500" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Methods Section */}
-      <div>
-        <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
-          <span className="text-sm font-medium text-editor-box-text">Methods</span>
-          <button
-            onClick={() => addItem('methods')}
-            className="p-1 hover:bg-gray-200 rounded-full transition-colors"
-          >
-            <Plus size={16} className="text-editor-box-text" />
-          </button>
-        </div>
-        <ul className="p-2 space-y-1">
-          {methods.map((method, index) => (
-            <li key={index} className="flex items-center gap-2">
-              <GripVertical size={16} className="text-gray-400" />
-              <input
-                className="flex-1 px-2 py-1 text-sm border rounded hover:border-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-                value={method}
-                onChange={(e) => updateItem('methods', index, e.target.value)}
-              />
-              <button
-                onClick={() => deleteItem('methods', index)}
-                className="p-1 hover:bg-red-100 rounded-full transition-colors"
-              >
-                <X size={14} className="text-red-500" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <BoxHeader
+        id={id}
+        title={title}
+        isConnectorMode={isConnectorMode}
+        isPendingConnection={isPendingConnection}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
+        onConnectionClick={onConnectionClick}
+        onResetConnections={onResetConnections}
+      />
+      <BoxSection
+        title="Attributes"
+        items={attributes}
+        onAdd={() => onUpdate(id, { attributes: [...attributes, 'New Attribute'] })}
+        onUpdate={(index, value) => {
+          const newAttributes = [...attributes];
+          newAttributes[index] = value;
+          onUpdate(id, { attributes: newAttributes });
+        }}
+        onDelete={(index) => {
+          const newAttributes = attributes.filter((_, i) => i !== index);
+          onUpdate(id, { attributes: newAttributes });
+        }}
+      />
+      <BoxSection
+        title="Methods"
+        items={methods}
+        onAdd={() => onUpdate(id, { methods: [...methods, 'New Method'] })}
+        onUpdate={(index, value) => {
+          const newMethods = [...methods];
+          newMethods[index] = value;
+          onUpdate(id, { methods: newMethods });
+        }}
+        onDelete={(index) => {
+          const newMethods = methods.filter((_, i) => i !== index);
+          onUpdate(id, { methods: newMethods });
+        }}
+      />
     </div>
   );
 };
