@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { RelationType, relationColors } from './types';
 
 interface Point {
   x: number;
@@ -9,6 +10,7 @@ interface DiagramConnectorProps {
   id: string;
   startPoint: Point;
   endPoint: Point;
+  type: RelationType;
   onUpdate: (id: string, startPoint: Point, endPoint: Point) => void;
   onDelete: (id: string) => void;
 }
@@ -17,6 +19,7 @@ const DiagramConnector: React.FC<DiagramConnectorProps> = ({
   id,
   startPoint,
   endPoint,
+  type,
   onUpdate,
   onDelete,
 }) => {
@@ -25,7 +28,6 @@ const DiagramConnector: React.FC<DiagramConnectorProps> = ({
   const [path, setPath] = useState('');
 
   useEffect(() => {
-    // Calculate the control points for the curved path
     const dx = endPoint.x - startPoint.x;
     const dy = endPoint.y - startPoint.y;
     const controlPoint1 = {
@@ -37,7 +39,6 @@ const DiagramConnector: React.FC<DiagramConnectorProps> = ({
       y: endPoint.y,
     };
 
-    // Create the SVG path
     const pathData = `
       M ${startPoint.x},${startPoint.y}
       C ${controlPoint1.x},${controlPoint1.y}
@@ -85,7 +86,6 @@ const DiagramConnector: React.FC<DiagramConnectorProps> = ({
     };
   }, [isDragging]);
 
-  // Calculate arrow markers
   const getArrowPoints = (point: Point, isStart: boolean) => {
     const angle = Math.atan2(
       endPoint.y - startPoint.y,
@@ -111,46 +111,43 @@ const DiagramConnector: React.FC<DiagramConnectorProps> = ({
 
   const startArrow = getArrowPoints(startPoint, true);
   const endArrow = getArrowPoints(endPoint, false);
+  const color = relationColors[type];
 
   return (
     <svg
-      className="absolute inset-0 pointer-events-none"
-      style={{ zIndex: 0 }}
+      className="fixed inset-0 w-full h-full pointer-events-none"
+      style={{ zIndex: 40 }}
     >
-      {/* Main connector path */}
       <path
         d={path}
         fill="none"
-        stroke="currentColor"
+        stroke={color}
         strokeWidth="2"
-        className="text-editor-connector-line"
       />
 
-      {/* Arrow markers */}
       <path
         d={`M ${startArrow[0].x},${startArrow[0].y} L ${startArrow[1].x},${startArrow[1].y} L ${startArrow[2].x},${startArrow[2].y} Z`}
-        fill="currentColor"
-        className="text-editor-connector-line"
+        fill={color}
       />
       <path
         d={`M ${endArrow[0].x},${endArrow[0].y} L ${endArrow[1].x},${endArrow[1].y} L ${endArrow[2].x},${endArrow[2].y} Z`}
-        fill="currentColor"
-        className="text-editor-connector-line"
+        fill={color}
       />
 
-      {/* Draggable handles */}
       <circle
         cx={startPoint.x}
         cy={startPoint.y}
         r="5"
-        className="fill-editor-connector-handle cursor-move pointer-events-auto"
+        fill={color}
+        className="cursor-move pointer-events-auto"
         onMouseDown={handleMouseDown('start')}
       />
       <circle
         cx={endPoint.x}
         cy={endPoint.y}
         r="5"
-        className="fill-editor-connector-handle cursor-move pointer-events-auto"
+        fill={color}
+        className="cursor-move pointer-events-auto"
         onMouseDown={handleMouseDown('end')}
       />
     </svg>

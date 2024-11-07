@@ -82,6 +82,7 @@ const DiagramBox: React.FC<DiagramBoxProps> = ({
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
+        zIndex: 50,
       }}
     >
       <BoxHeader
