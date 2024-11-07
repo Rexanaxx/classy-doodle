@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import DiagramBox from './DiagramBox';
 import DiagramConnector from './DiagramConnector';
 import Toolbar from './Toolbar';
-import { RelationType } from './types';
 
 interface Box {
   id: string;
@@ -18,7 +17,6 @@ interface Connector {
   endBoxId: string;
   startPoint: { x: number; y: number };
   endPoint: { x: number; y: number };
-  type: RelationType;
 }
 
 const Editor: React.FC = () => {
@@ -26,7 +24,6 @@ const Editor: React.FC = () => {
   const [connectors, setConnectors] = useState<Connector[]>([]);
   const [isConnectorMode, setIsConnectorMode] = useState(false);
   const [pendingConnection, setPendingConnection] = useState<string | null>(null);
-  const [selectedRelationType, setSelectedRelationType] = useState<RelationType>('association');
 
   const handleAddBox = () => {
     const newBox: Box = {
@@ -44,6 +41,7 @@ const Editor: React.FC = () => {
       box.id === id ? { ...box, position: newPosition } : box
     ));
 
+    // Update connector positions
     setConnectors(connectors.map(conn => {
       if (conn.startBoxId === id || conn.endBoxId === id) {
         const startBox = boxes.find(b => b.id === conn.startBoxId);
@@ -92,7 +90,6 @@ const Editor: React.FC = () => {
           endBoxId: boxId,
           startPoint: startBox.position,
           endPoint: endBox.position,
-          type: selectedRelationType,
         };
         setConnectors([...connectors, newConnector]);
       }
@@ -121,8 +118,6 @@ const Editor: React.FC = () => {
           setIsConnectorMode(!isConnectorMode);
           setPendingConnection(null);
         }}
-        selectedRelationType={selectedRelationType}
-        onRelationTypeChange={setSelectedRelationType}
       />
 
       {boxes.map(box => (
@@ -143,7 +138,6 @@ const Editor: React.FC = () => {
         <DiagramConnector
           key={connector.id}
           {...connector}
-          type={connector.type}
           onUpdate={() => {}}
           onDelete={() => {}}
         />
