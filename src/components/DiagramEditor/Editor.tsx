@@ -3,9 +3,8 @@ import DiagramBox from './DiagramBox';
 import DiagramConnector from './DiagramConnector';
 import Toolbar from './Toolbar';
 import { RelationType } from './types';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { loadUserDiagram, saveDiagram } from '@/services/diagramService';
 
 interface Box {
   id: string;
@@ -32,69 +31,18 @@ const Editor: React.FC = () => {
   const [selectedRelationType, setSelectedRelationType] = useState<RelationType>('association');
 
   useEffect(() => {
+    const loadDiagram = async () => {
+      const diagram = await loadUserDiagram();
+      if (diagram) {
+        setBoxes(diagram.boxes);
+        setConnectors(diagram.connectors);
+      }
+    };
     loadDiagram();
   }, []);
 
-  const loadDiagram = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: diagrams, error } = await supabase
-        .from('diagrams')
-        .select('diagram_data')
-        .eq('user_id', user.id)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (error) {
-        if (error.code !== 'PGRST116') { // No rows returned is not an error for us
-          console.error('Error loading diagram:', error);
-          toast.error('Failed to load diagram');
-        }
-        return;
-      }
-
-      if (diagrams) {
-        setBoxes(diagrams.diagram_data.boxes || []);
-        setConnectors(diagrams.diagram_data.connectors || []);
-        toast.success('Diagram loaded successfully');
-      }
-    } catch (error) {
-      console.error('Error loading diagram:', error);
-      toast.error('Failed to load diagram');
-    }
-  };
-
   const handleSave = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error('Please log in to save your diagram');
-        return;
-      }
-
-      const diagramData = {
-        boxes,
-        connectors,
-      };
-
-      const { error } = await supabase
-        .from('diagrams')
-        .upsert({
-          user_id: user.id,
-          diagram_data: diagramData,
-        }, {
-          onConflict: 'user_id'
-        });
-
-      if (error) throw error;
-      toast.success('Diagram saved successfully');
-    } catch (error) {
-      console.error('Error saving diagram:', error);
-      toast.error('Failed to save diagram');
-    }
+    await saveDiagram({ boxes, connectors });
   };
 
   const handleAddBox = () => {

@@ -8,3 +8,20 @@ export const relationColors: Record<RelationType, string> = {
   dependency: '#EF4444', // red
   realization: '#6366F1'  // indigo
 };
+
+export interface Box {
+  id: string;
+  title: string;
+  attributes: string[];
+  methods: string[];
+  position: { x: number; y: number };
+}
+
+export interface Connector {
+  id: string;
+  startBoxId: string;
+  endBoxId: string;
+  startPoint: { x: number; y: number };
+  endPoint: { x: number; y: number };
+  type: RelationType;
+}
