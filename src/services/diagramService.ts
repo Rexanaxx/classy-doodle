@@ -48,14 +48,35 @@ export async function saveDiagram(diagramData: DiagramData): Promise<boolean> {
       return false;
     }
 
-    const { error } = await supabase
+    // First, check if a diagram exists for this user
+    const { data: existingDiagrams } = await supabase
       .from('diagrams')
-      .upsert({
-        user_id: user.id,
-        diagram_data: diagramDataToJson(diagramData)
-      });
+      .select('id')
+      .eq('user_id', user.id)
+      .limit(1);
 
-    if (error) throw error;
+    if (existingDiagrams && existingDiagrams.length > 0) {
+      // Update existing diagram
+      const { error } = await supabase
+        .from('diagrams')
+        .update({
+          diagram_data: diagramDataToJson(diagramData)
+        })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+    } else {
+      // Insert new diagram
+      const { error } = await supabase
+        .from('diagrams')
+        .insert({
+          user_id: user.id,
+          diagram_data: diagramDataToJson(diagramData)
+        });
+
+      if (error) throw error;
+    }
+
     toast.success('Diagram saved successfully');
     return true;
   } catch (error) {
