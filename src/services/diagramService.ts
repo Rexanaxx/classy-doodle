@@ -12,25 +12,27 @@ export async function loadUserDiagram(): Promise<DiagramData | null> {
       .select('diagram_data')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
-      .limit(1)
-      .single();
+      .limit(1);
 
     if (error) {
-      if (error.code !== 'PGRST116') {
-        console.error('Error loading diagram:', error);
-        toast.error('Failed to load diagram');
-      }
+      console.error('Error loading diagram:', error);
+      toast.error('Failed to load diagram');
       return null;
     }
 
-    if (diagrams) {
-      const diagramData = jsonToDiagramData(diagrams.diagram_data);
+    if (diagrams && diagrams.length > 0) {
+      const diagramData = jsonToDiagramData(diagrams[0].diagram_data);
       if (diagramData) {
         toast.success('Diagram loaded successfully');
         return diagramData;
       }
     }
-    return null;
+
+    // If no diagram exists yet, return a new empty diagram
+    return {
+      boxes: [],
+      connectors: []
+    };
   } catch (error) {
     console.error('Error loading diagram:', error);
     toast.error('Failed to load diagram');
