@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { DiagramData, isDiagramData } from "@/types/database";
+import { DiagramData, diagramDataToJson, jsonToDiagramData } from "@/types/database";
 import { toast } from "sonner";
 
 export async function loadUserDiagram(): Promise<DiagramData | null> {
@@ -23,9 +23,12 @@ export async function loadUserDiagram(): Promise<DiagramData | null> {
       return null;
     }
 
-    if (diagrams && isDiagramData(diagrams.diagram_data)) {
-      toast.success('Diagram loaded successfully');
-      return diagrams.diagram_data;
+    if (diagrams) {
+      const diagramData = jsonToDiagramData(diagrams.diagram_data);
+      if (diagramData) {
+        toast.success('Diagram loaded successfully');
+        return diagramData;
+      }
     }
     return null;
   } catch (error) {
@@ -47,7 +50,7 @@ export async function saveDiagram(diagramData: DiagramData): Promise<boolean> {
       .from('diagrams')
       .upsert({
         user_id: user.id,
-        diagram_data: diagramData as any,
+        diagram_data: diagramDataToJson(diagramData)
       }, {
         onConflict: 'user_id'
       });
