@@ -13,12 +13,17 @@ export function isDiagramData(json: unknown): json is DiagramData {
 }
 
 export function diagramDataToJson(data: DiagramData): Json {
-  return data as unknown as Json;
+  return JSON.parse(JSON.stringify(data));
 }
 
 export function jsonToDiagramData(json: Json): DiagramData | null {
   try {
-    if (isDiagramData(json)) {
+    if (typeof json === 'string') {
+      const parsed = JSON.parse(json);
+      if (isDiagramData(parsed)) {
+        return parsed;
+      }
+    } else if (isDiagramData(json)) {
       return json;
     }
     return null;

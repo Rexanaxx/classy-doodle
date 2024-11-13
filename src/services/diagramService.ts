@@ -51,8 +51,6 @@ export async function saveDiagram(diagramData: DiagramData): Promise<boolean> {
       .upsert({
         user_id: user.id,
         diagram_data: diagramDataToJson(diagramData)
-      }, {
-        onConflict: 'user_id'
       });
 
     if (error) throw error;
