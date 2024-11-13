@@ -131,7 +131,7 @@ const Editor: React.FC = () => {
         backgroundSize: '40px 40px',
       }}
     >
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed top-4 right-16 z-50">
         <Button
           onClick={handleSave}
           className="mr-2"
@@ -140,6 +140,7 @@ const Editor: React.FC = () => {
           Save Diagram
         </Button>
       </div>
+      
       <Toolbar
         onAddBox={handleAddBox}
         isConnectorMode={isConnectorMode}
