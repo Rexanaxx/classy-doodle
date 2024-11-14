@@ -131,7 +131,7 @@ const Editor: React.FC = () => {
         backgroundSize: '40px 40px',
       }}
     >
-      <div className="fixed top-4 right-16 z-50">
+      <div className="fixed top-4 right-24 z-50">
         <Button
           onClick={handleSave}
           className="mr-2"
