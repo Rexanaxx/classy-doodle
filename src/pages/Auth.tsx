@@ -1,18 +1,24 @@
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const AuthPage = () => {
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
         navigate('/');
       }
     });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, [navigate]);
 
   return (
@@ -22,13 +28,21 @@ const AuthPage = () => {
           <h2 className="mt-6 text-3xl font-bold text-gray-900">Welcome</h2>
           <p className="mt-2 text-sm text-gray-600">Sign in or create an account</p>
         </div>
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
         <Auth
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
           theme="light"
           providers={[]}
           redirectTo={window.location.origin}
-          showLinks={false}
+          onError={(error) => {
+            setError(error.message);
+            toast.error(error.message);
+          }}
           localization={{
             variables: {
               sign_up: {
