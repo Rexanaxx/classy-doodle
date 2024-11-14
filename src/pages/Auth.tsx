@@ -39,10 +39,6 @@ const AuthPage = () => {
           theme="light"
           providers={[]}
           redirectTo={window.location.origin}
-          onError={(error) => {
-            setError(error.message);
-            toast.error(error.message);
-          }}
           localization={{
             variables: {
               sign_up: {
