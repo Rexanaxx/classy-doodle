@@ -57,6 +57,9 @@ const AuthPage = () => {
                 social_provider_text: 'Sign in with {{provider}}',
                 link_text: 'Already have an account? Sign in',
               },
+              forgotten_password: {
+                link_text: '',
+              },
             },
           }}
         />
