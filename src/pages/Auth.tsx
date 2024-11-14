@@ -8,7 +8,6 @@ const AuthPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
     supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
         navigate('/');
@@ -28,6 +27,30 @@ const AuthPage = () => {
           appearance={{ theme: ThemeSupa }}
           theme="light"
           providers={[]}
+          redirectTo={window.location.origin}
+          onlyThirdPartyProviders={false}
+          magicLink={false}
+          showLinks={false}
+          localization={{
+            variables: {
+              sign_up: {
+                email_label: 'Email',
+                password_label: 'Create a Password',
+                button_label: 'Sign Up',
+                loading_button_label: 'Signing Up ...',
+                social_provider_text: 'Sign in with {{provider}}',
+                link_text: 'Don't have an account? Sign up',
+              },
+              sign_in: {
+                email_label: 'Email',
+                password_label: 'Your Password',
+                button_label: 'Sign In',
+                loading_button_label: 'Signing In ...',
+                social_provider_text: 'Sign in with {{provider}}',
+                link_text: 'Already have an account? Sign in',
+              },
+            },
+          }}
         />
       </div>
     </div>
