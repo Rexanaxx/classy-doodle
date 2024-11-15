@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import DiagramBox from './DiagramBox';
 import DiagramConnector from './DiagramConnector';
-import Toolbar from './Toolbar';
 import { RelationType, BoxItem } from './types';
 import { Button } from '@/components/ui/button';
 import { loadUserDiagram, saveDiagram } from '@/services/diagramService';
-import { toast } from 'sonner';
 import { Code } from 'lucide-react';
+import JsonDialog from './JsonDialog';
+import EditorToolbar from './EditorToolbar';
 
 interface Box {
   id: string;
@@ -32,6 +32,7 @@ const Editor: React.FC = () => {
   const [isConnectorMode, setIsConnectorMode] = useState(false);
   const [pendingConnection, setPendingConnection] = useState<string | null>(null);
   const [selectedRelationType, setSelectedRelationType] = useState<RelationType>('association');
+  const [isJsonDialogOpen, setIsJsonDialogOpen] = useState(false);
 
   useEffect(() => {
     const loadDiagram = async () => {
@@ -127,18 +128,6 @@ const Editor: React.FC = () => {
     ));
   };
 
-  const handleShowJson = () => {
-    const diagramData = { boxes, connectors };
-    toast('Diagram JSON', {
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white text-xs">{JSON.stringify(diagramData, null, 2)}</code>
-        </pre>
-      ),
-      duration: 10000,
-    });
-  };
-
   return (
     <div
       className="fixed inset-0 bg-editor-bg overflow-hidden"
@@ -147,19 +136,9 @@ const Editor: React.FC = () => {
         backgroundSize: '40px 40px',
       }}
     >
-      <div className="fixed top-4 right-24 z-50">
-        <Button
-          onClick={handleSave}
-          className="mr-2"
-          variant="default"
-        >
-          Save Diagram
-        </Button>
-      </div>
-      
-      <Toolbar
-        onAddBox={() => handleAddBox(false)}
-        onAddInterface={() => handleAddBox(true)}
+      <EditorToolbar
+        onSave={handleSave}
+        onAddBox={handleAddBox}
         isConnectorMode={isConnectorMode}
         onToggleConnectorMode={() => {
           setIsConnectorMode(!isConnectorMode);
@@ -194,7 +173,7 @@ const Editor: React.FC = () => {
       ))}
 
       <Button
-        onClick={handleShowJson}
+        onClick={() => setIsJsonDialogOpen(true)}
         className="fixed bottom-4 right-4 z-50"
         variant="outline"
         size="sm"
@@ -202,6 +181,13 @@ const Editor: React.FC = () => {
         <Code className="w-4 h-4 mr-2" />
         Show JSON
       </Button>
+
+      <JsonDialog
+        isOpen={isJsonDialogOpen}
+        onOpenChange={setIsJsonDialogOpen}
+        boxes={boxes}
+        connectors={connectors}
+      />
     </div>
   );
 };
