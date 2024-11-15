@@ -5,6 +5,8 @@ import Toolbar from './Toolbar';
 import { RelationType, BoxItem } from './types';
 import { Button } from '@/components/ui/button';
 import { loadUserDiagram, saveDiagram } from '@/services/diagramService';
+import { toast } from 'sonner';
+import { Code } from 'lucide-react';
 
 interface Box {
   id: string;
@@ -125,6 +127,18 @@ const Editor: React.FC = () => {
     ));
   };
 
+  const handleShowJson = () => {
+    const diagramData = { boxes, connectors };
+    toast('Diagram JSON', {
+      description: (
+        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+          <code className="text-white text-xs">{JSON.stringify(diagramData, null, 2)}</code>
+        </pre>
+      ),
+      duration: 10000,
+    });
+  };
+
   return (
     <div
       className="fixed inset-0 bg-editor-bg overflow-hidden"
@@ -178,6 +192,16 @@ const Editor: React.FC = () => {
           onDelete={() => {}}
         />
       ))}
+
+      <Button
+        onClick={handleShowJson}
+        className="fixed bottom-4 right-4 z-50"
+        variant="outline"
+        size="sm"
+      >
+        <Code className="w-4 h-4 mr-2" />
+        Show JSON
+      </Button>
     </div>
   );
 };
