@@ -13,6 +13,7 @@ import { RelationType, relationColors } from './types';
 
 interface ToolbarProps {
   onAddBox: () => void;
+  onAddInterface: () => void;
   isConnectorMode: boolean;
   onToggleConnectorMode: () => void;
   selectedRelationType: RelationType;
@@ -21,6 +22,7 @@ interface ToolbarProps {
 
 const Toolbar: React.FC<ToolbarProps> = ({
   onAddBox,
+  onAddInterface,
   isConnectorMode,
   onToggleConnectorMode,
   selectedRelationType,
@@ -39,6 +41,18 @@ const Toolbar: React.FC<ToolbarProps> = ({
       >
         <Square size={16} />
         Add Class
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          onAddInterface();
+          toast.success('New interface added');
+        }}
+        className="flex items-center gap-2 border-red-500 hover:bg-red-50 text-red-500"
+      >
+        <Square size={16} />
+        Add Interface
       </Button>
       <Button
         variant={isConnectorMode ? "default" : "outline"}

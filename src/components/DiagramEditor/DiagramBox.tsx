@@ -10,6 +10,7 @@ interface DiagramBoxProps {
   attributes: BoxItem[];
   methods: BoxItem[];
   position: { x: number; y: number };
+  isInterface?: boolean;
   isConnectorMode: boolean;
   isPendingConnection: boolean;
   onMove: (id: string, newPosition: { x: number; y: number }) => void;
@@ -25,6 +26,7 @@ const DiagramBox: React.FC<DiagramBoxProps> = ({
   attributes,
   methods,
   position,
+  isInterface = false,
   isConnectorMode,
   isPendingConnection,
   onMove,
@@ -74,11 +76,12 @@ const DiagramBox: React.FC<DiagramBoxProps> = ({
     <div
       ref={boxRef}
       className={cn(
-        "absolute bg-white border-2 border-editor-box-border rounded-lg shadow-lg min-w-[200px]",
+        "absolute bg-white border-2 rounded-lg shadow-lg min-w-[200px]",
         "transition-shadow duration-200",
         isDragging && "shadow-xl",
         "animate-fade-in",
-        isPendingConnection && "ring-2 ring-blue-500"
+        isPendingConnection && "ring-2 ring-blue-500",
+        isInterface ? "border-red-500" : "border-editor-box-border"
       )}
       style={{
         left: `${position.x}px`,
@@ -99,20 +102,22 @@ const DiagramBox: React.FC<DiagramBoxProps> = ({
           onMouseDown: handleDragStart,
         }}
       />
-      <BoxSection
-        title="Attributes"
-        items={attributes}
-        onAdd={() => onUpdate(id, { attributes: [...attributes, { value: 'New Attribute', accessModifier: 'public' }] })}
-        onUpdate={(index, value, accessModifier) => {
-          const newAttributes = [...attributes];
-          newAttributes[index] = { value, accessModifier };
-          onUpdate(id, { attributes: newAttributes });
-        }}
-        onDelete={(index) => {
-          const newAttributes = attributes.filter((_, i) => i !== index);
-          onUpdate(id, { attributes: newAttributes });
-        }}
-      />
+      {!isInterface && (
+        <BoxSection
+          title="Attributes"
+          items={attributes}
+          onAdd={() => onUpdate(id, { attributes: [...attributes, { value: 'New Attribute', accessModifier: 'public' }] })}
+          onUpdate={(index, value, accessModifier) => {
+            const newAttributes = [...attributes];
+            newAttributes[index] = { value, accessModifier };
+            onUpdate(id, { attributes: newAttributes });
+          }}
+          onDelete={(index) => {
+            const newAttributes = attributes.filter((_, i) => i !== index);
+            onUpdate(id, { attributes: newAttributes });
+          }}
+        />
+      )}
       <BoxSection
         title="Methods"
         items={methods}

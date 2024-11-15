@@ -12,6 +12,7 @@ interface Box {
   attributes: BoxItem[];
   methods: BoxItem[];
   position: { x: number; y: number };
+  isInterface?: boolean;
 }
 
 interface Connector {
@@ -45,13 +46,14 @@ const Editor: React.FC = () => {
     await saveDiagram({ boxes, connectors });
   };
 
-  const handleAddBox = () => {
+  const handleAddBox = (isInterface: boolean = false) => {
     const newBox: Box = {
       id: `box-${Date.now()}`,
-      title: 'New Class',
+      title: isInterface ? 'New Interface' : 'New Class',
       attributes: [],
       methods: [],
       position: { x: 100, y: 100 },
+      isInterface,
     };
     setBoxes([...boxes, newBox]);
   };
@@ -142,7 +144,8 @@ const Editor: React.FC = () => {
       </div>
       
       <Toolbar
-        onAddBox={handleAddBox}
+        onAddBox={() => handleAddBox(false)}
+        onAddInterface={() => handleAddBox(true)}
         isConnectorMode={isConnectorMode}
         onToggleConnectorMode={() => {
           setIsConnectorMode(!isConnectorMode);
