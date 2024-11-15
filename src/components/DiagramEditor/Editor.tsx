@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 import DiagramBox from './DiagramBox';
 import DiagramConnector from './DiagramConnector';
 import Toolbar from './Toolbar';
-import { RelationType } from './types';
+import { RelationType, BoxItem } from './types';
 import { Button } from '@/components/ui/button';
 import { loadUserDiagram, saveDiagram } from '@/services/diagramService';
 
 interface Box {
   id: string;
   title: string;
-  attributes: string[];
-  methods: string[];
+  attributes: BoxItem[];
+  methods: BoxItem[];
   position: { x: number; y: number };
 }
 
@@ -79,7 +79,7 @@ const Editor: React.FC = () => {
 
   const handleBoxUpdate = (
     id: string,
-    data: { title?: string; attributes?: string[]; methods?: string[] }
+    data: { title?: string; attributes?: BoxItem[]; methods?: BoxItem[] }
   ) => {
     setBoxes(boxes.map(box =>
       box.id === id ? { ...box, ...data } : box

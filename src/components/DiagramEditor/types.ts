@@ -9,11 +9,18 @@ export const relationColors: Record<RelationType, string> = {
   realization: '#6366F1'  // indigo
 };
 
+export type AccessModifier = 'public' | 'private' | 'protected' | 'static';
+
+export interface BoxItem {
+  value: string;
+  accessModifier: AccessModifier;
+}
+
 export interface Box {
   id: string;
   title: string;
-  attributes: string[];
-  methods: string[];
+  attributes: BoxItem[];
+  methods: BoxItem[];
   position: { x: number; y: number };
 }
 
@@ -25,3 +32,18 @@ export interface Connector {
   endPoint: { x: number; y: number };
   type: RelationType;
 }
+
+export const getAccessModifierSymbol = (modifier: AccessModifier): string => {
+  switch (modifier) {
+    case 'public':
+      return '+';
+    case 'private':
+      return '-';
+    case 'protected':
+      return '#';
+    case 'static':
+      return '*';
+    default:
+      return '+';
+  }
+};

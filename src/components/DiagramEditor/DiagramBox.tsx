@@ -2,17 +2,18 @@ import React, { useState, useRef } from 'react';
 import BoxHeader from './BoxHeader';
 import BoxSection from './BoxSection';
 import { cn } from '@/lib/utils';
+import { AccessModifier, BoxItem } from './types';
 
 interface DiagramBoxProps {
   id: string;
   title: string;
-  attributes: string[];
-  methods: string[];
+  attributes: BoxItem[];
+  methods: BoxItem[];
   position: { x: number; y: number };
   isConnectorMode: boolean;
   isPendingConnection: boolean;
   onMove: (id: string, newPosition: { x: number; y: number }) => void;
-  onUpdate: (id: string, data: { title?: string; attributes?: string[]; methods?: string[] }) => void;
+  onUpdate: (id: string, data: { title?: string; attributes?: BoxItem[]; methods?: BoxItem[] }) => void;
   onDelete: (id: string) => void;
   onConnectionClick: (id: string) => void;
   onResetConnections: (id: string) => void;
@@ -101,10 +102,10 @@ const DiagramBox: React.FC<DiagramBoxProps> = ({
       <BoxSection
         title="Attributes"
         items={attributes}
-        onAdd={() => onUpdate(id, { attributes: [...attributes, 'New Attribute'] })}
-        onUpdate={(index, value) => {
+        onAdd={() => onUpdate(id, { attributes: [...attributes, { value: 'New Attribute', accessModifier: 'public' }] })}
+        onUpdate={(index, value, accessModifier) => {
           const newAttributes = [...attributes];
-          newAttributes[index] = value;
+          newAttributes[index] = { value, accessModifier };
           onUpdate(id, { attributes: newAttributes });
         }}
         onDelete={(index) => {
@@ -115,10 +116,10 @@ const DiagramBox: React.FC<DiagramBoxProps> = ({
       <BoxSection
         title="Methods"
         items={methods}
-        onAdd={() => onUpdate(id, { methods: [...methods, 'New Method'] })}
-        onUpdate={(index, value) => {
+        onAdd={() => onUpdate(id, { methods: [...methods, { value: 'New Method', accessModifier: 'public' }] })}
+        onUpdate={(index, value, accessModifier) => {
           const newMethods = [...methods];
-          newMethods[index] = value;
+          newMethods[index] = { value, accessModifier };
           onUpdate(id, { methods: newMethods });
         }}
         onDelete={(index) => {

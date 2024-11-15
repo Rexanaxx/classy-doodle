@@ -1,11 +1,18 @@
 import React from 'react';
 import { Plus, GripVertical, X } from 'lucide-react';
+import { AccessModifier, BoxItem, getAccessModifierSymbol } from './types';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface BoxSectionProps {
   title: string;
-  items: string[];
+  items: BoxItem[];
   onAdd: () => void;
-  onUpdate: (index: number, value: string) => void;
+  onUpdate: (index: number, value: string, accessModifier: AccessModifier) => void;
   onDelete: (index: number) => void;
 }
 
@@ -31,10 +38,29 @@ const BoxSection: React.FC<BoxSectionProps> = ({
         {items.map((item, index) => (
           <li key={index} className="flex items-center gap-2">
             <GripVertical size={16} className="text-gray-400" />
+            <DropdownMenu>
+              <DropdownMenuTrigger className="w-6 text-center hover:bg-gray-100 rounded">
+                {getAccessModifierSymbol(item.accessModifier)}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => onUpdate(index, item.value, 'public')}>
+                  + Public
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onUpdate(index, item.value, 'private')}>
+                  - Private
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onUpdate(index, item.value, 'protected')}>
+                  # Protected
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onUpdate(index, item.value, 'static')}>
+                  * Static
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <input
               className="flex-1 px-2 py-1 text-sm border rounded hover:border-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-              value={item}
-              onChange={(e) => onUpdate(index, e.target.value)}
+              value={item.value}
+              onChange={(e) => onUpdate(index, e.target.value, item.accessModifier)}
             />
             <button
               onClick={() => onDelete(index)}
