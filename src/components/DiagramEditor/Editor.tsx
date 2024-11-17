@@ -1,53 +1,41 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import DiagramBox from './DiagramBox';
 import DiagramConnector from './DiagramConnector';
+import { RelationType, BoxItem } from './types';
+import { Button } from '@/components/ui/button';
+import { loadUserDiagram, saveDiagram } from '@/services/diagramService';
+import { Code, Download } from 'lucide-react';
 import JsonDialog from './JsonDialog';
 import EditorToolbar from './EditorToolbar';
-import EditorButtons from './EditorButtons';
 import * as htmlToImage from 'html-to-image';
 import { toast } from 'sonner';
-import { useEditorState } from './EditorState';
-import DraggableText from './DraggableText';
-import { Box, RelationType } from './types';
-import { loadUserDiagram, saveDiagram } from '@/services/diagramService';
-import { useDiagramHandlers } from './useDiagramHandlers';
+
+interface Box {
+  id: string;
+  title: string;
+  attributes: BoxItem[];
+  methods: BoxItem[];
+  position: { x: number; y: number };
+  isInterface?: boolean;
+}
+
+interface Connector {
+  id: string;
+  startBoxId: string;
+  endBoxId: string;
+  startPoint: { x: number; y: number };
+  endPoint: { x: number; y: number };
+  type: RelationType;
+}
 
 const Editor: React.FC = () => {
-  const {
-    boxes,
-    setBoxes,
-    connectors,
-    setConnectors,
-    textFields,
-    setTextFields,
-    isConnectorMode,
-    setIsConnectorMode,
-    pendingConnection,
-    setPendingConnection,
-    selectedRelationType,
-    setSelectedRelationType,
-    isJsonDialogOpen,
-    setIsJsonDialogOpen,
-  } = useEditorState();
-
+  const [boxes, setBoxes] = useState<Box[]>([]);
+  const [connectors, setConnectors] = useState<Connector[]>([]);
+  const [isConnectorMode, setIsConnectorMode] = useState(false);
+  const [pendingConnection, setPendingConnection] = useState<string | null>(null);
+  const [selectedRelationType, setSelectedRelationType] = useState<RelationType>('association');
+  const [isJsonDialogOpen, setIsJsonDialogOpen] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
-
-  const {
-    handleBoxMove,
-    handleBoxUpdate,
-    handleBoxDelete,
-    handleConnectionClick,
-    handleResetConnections,
-  } = useDiagramHandlers({
-    boxes,
-    setBoxes,
-    connectors,
-    setConnectors,
-    selectedRelationType,
-    pendingConnection,
-    setPendingConnection,
-    isConnectorMode,
-  });
 
   useEffect(() => {
     const loadDiagram = async () => {
@@ -76,6 +64,73 @@ const Editor: React.FC = () => {
     setBoxes([...boxes, newBox]);
   };
 
+  const handleBoxMove = (id: string, newPosition: { x: number; y: number }) => {
+    setBoxes(boxes.map(box => 
+      box.id === id ? { ...box, position: newPosition } : box
+    ));
+
+    setConnectors(connectors.map(conn => {
+      if (conn.startBoxId === id || conn.endBoxId === id) {
+        const startBox = boxes.find(b => b.id === conn.startBoxId);
+        const endBox = boxes.find(b => b.id === conn.endBoxId);
+        if (startBox && endBox) {
+          return {
+            ...conn,
+            startPoint: conn.startBoxId === id ? newPosition : conn.startPoint,
+            endPoint: conn.endBoxId === id ? newPosition : conn.endPoint,
+          };
+        }
+      }
+      return conn;
+    }));
+  };
+
+  const handleBoxUpdate = (
+    id: string,
+    data: { title?: string; attributes?: BoxItem[]; methods?: BoxItem[] }
+  ) => {
+    setBoxes(boxes.map(box =>
+      box.id === id ? { ...box, ...data } : box
+    ));
+  };
+
+  const handleBoxDelete = (id: string) => {
+    setBoxes(boxes.filter(box => box.id !== id));
+    setConnectors(connectors.filter(conn => 
+      conn.startBoxId !== id && conn.endBoxId !== id
+    ));
+  };
+
+  const handleConnectionClick = (boxId: string) => {
+    if (!isConnectorMode) return;
+
+    if (!pendingConnection) {
+      setPendingConnection(boxId);
+    } else if (pendingConnection !== boxId) {
+      const startBox = boxes.find(b => b.id === pendingConnection);
+      const endBox = boxes.find(b => b.id === boxId);
+      
+      if (startBox && endBox) {
+        const newConnector: Connector = {
+          id: `connector-${Date.now()}`,
+          startBoxId: pendingConnection,
+          endBoxId: boxId,
+          startPoint: startBox.position,
+          endPoint: endBox.position,
+          type: selectedRelationType,
+        };
+        setConnectors([...connectors, newConnector]);
+      }
+      setPendingConnection(null);
+    }
+  };
+
+  const handleResetConnections = (boxId: string) => {
+    setConnectors(connectors.filter(conn => 
+      conn.startBoxId !== boxId && conn.endBoxId !== boxId
+    ));
+  };
+
   const handleExport = async () => {
     if (editorRef.current) {
       try {
@@ -92,28 +147,6 @@ const Editor: React.FC = () => {
     }
   };
 
-  const handleAddTextField = () => {
-    const newTextField = {
-      id: `text-${Date.now()}`,
-      position: { x: 100, y: 100 },
-    };
-    setTextFields([...textFields, newTextField]);
-  };
-
-  const handleTextFieldMove = (id: string, newPosition: { x: number; y: number }) => {
-    setTextFields(textFields.map(field => 
-      field.id === id ? { ...field, position: newPosition } : field
-    ));
-  };
-
-  const handleTextFieldDelete = (id: string) => {
-    setTextFields(textFields.filter(field => field.id !== id));
-  };
-
-  const handleRelationTypeChange = (type: RelationType) => {
-    setSelectedRelationType(type);
-  };
-
   return (
     <div
       ref={editorRef}
@@ -123,11 +156,15 @@ const Editor: React.FC = () => {
         backgroundSize: '40px 40px',
       }}
     >
-      <EditorButtons
-        onExport={handleExport}
-        onAddTextField={handleAddTextField}
-        onShowJson={() => setIsJsonDialogOpen(true)}
-      />
+      <Button
+        onClick={handleExport}
+        className="fixed top-4 left-4 z-50"
+        variant="outline"
+        size="sm"
+      >
+        <Download className="w-4 h-4 mr-2" />
+        Export
+      </Button>
 
       <EditorToolbar
         onSave={handleSave}
@@ -138,7 +175,7 @@ const Editor: React.FC = () => {
           setPendingConnection(null);
         }}
         selectedRelationType={selectedRelationType}
-        onRelationTypeChange={handleRelationTypeChange}
+        onRelationTypeChange={setSelectedRelationType}
       />
 
       {boxes.map(box => (
@@ -165,15 +202,15 @@ const Editor: React.FC = () => {
         />
       ))}
 
-      {textFields.map(field => (
-        <DraggableText
-          key={field.id}
-          id={field.id}
-          position={field.position}
-          onMove={handleTextFieldMove}
-          onDelete={handleTextFieldDelete}
-        />
-      ))}
+      <Button
+        onClick={() => setIsJsonDialogOpen(true)}
+        className="fixed bottom-4 right-4 z-50"
+        variant="outline"
+        size="sm"
+      >
+        <Code className="w-4 h-4 mr-2" />
+        Show JSON
+      </Button>
 
       <JsonDialog
         isOpen={isJsonDialogOpen}
