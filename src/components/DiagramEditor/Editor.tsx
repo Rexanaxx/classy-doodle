@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import DiagramBox from './DiagramBox';
 import DiagramConnector from './DiagramConnector';
 import { RelationType, BoxItem } from './types';
 import { Button } from '@/components/ui/button';
 import { loadUserDiagram, saveDiagram } from '@/services/diagramService';
-import { Code } from 'lucide-react';
+import { Code, Download } from 'lucide-react';
 import JsonDialog from './JsonDialog';
 import EditorToolbar from './EditorToolbar';
+import * as htmlToImage from 'html-to-image';
+import { toast } from 'sonner';
 
 interface Box {
   id: string;
@@ -33,6 +35,7 @@ const Editor: React.FC = () => {
   const [pendingConnection, setPendingConnection] = useState<string | null>(null);
   const [selectedRelationType, setSelectedRelationType] = useState<RelationType>('association');
   const [isJsonDialogOpen, setIsJsonDialogOpen] = useState(false);
+  const editorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadDiagram = async () => {
@@ -128,14 +131,41 @@ const Editor: React.FC = () => {
     ));
   };
 
+  const handleExport = async () => {
+    if (editorRef.current) {
+      try {
+        const dataUrl = await htmlToImage.toPng(editorRef.current);
+        const link = document.createElement('a');
+        link.download = 'diagram.png';
+        link.href = dataUrl;
+        link.click();
+        toast.success('Diagram exported successfully');
+      } catch (error) {
+        toast.error('Failed to export diagram');
+        console.error('Error exporting diagram:', error);
+      }
+    }
+  };
+
   return (
     <div
+      ref={editorRef}
       className="fixed inset-0 bg-editor-bg overflow-hidden"
       style={{
         backgroundImage: 'radial-gradient(circle at 1px 1px, var(--tw-colors-editor-grid) 1px, transparent 0)',
         backgroundSize: '40px 40px',
       }}
     >
+      <Button
+        onClick={handleExport}
+        className="fixed top-4 left-4 z-50"
+        variant="outline"
+        size="sm"
+      >
+        <Download className="w-4 h-4 mr-2" />
+        Export
+      </Button>
+
       <EditorToolbar
         onSave={handleSave}
         onAddBox={handleAddBox}
