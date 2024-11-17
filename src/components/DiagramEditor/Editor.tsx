@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DiagramBox from './DiagramBox';
 import DiagramConnector from './DiagramConnector';
-import { RelationType, Box, BoxItem, Connector } from './types';
+import { RelationType, BoxItem } from './types';
 import { Button } from '@/components/ui/button';
 import { loadUserDiagram, saveDiagram } from '@/services/diagramService';
 import { Code, Download } from 'lucide-react';
@@ -10,11 +10,25 @@ import EditorToolbar from './EditorToolbar';
 import * as htmlToImage from 'html-to-image';
 import { toast } from 'sonner';
 
-interface EditorProps {
-  diagramId: string;
+interface Box {
+  id: string;
+  title: string;
+  attributes: BoxItem[];
+  methods: BoxItem[];
+  position: { x: number; y: number };
+  isInterface?: boolean;
 }
 
-const Editor: React.FC<EditorProps> = ({ diagramId }) => {
+interface Connector {
+  id: string;
+  startBoxId: string;
+  endBoxId: string;
+  startPoint: { x: number; y: number };
+  endPoint: { x: number; y: number };
+  type: RelationType;
+}
+
+const Editor: React.FC = () => {
   const [boxes, setBoxes] = useState<Box[]>([]);
   const [connectors, setConnectors] = useState<Connector[]>([]);
   const [isConnectorMode, setIsConnectorMode] = useState(false);
@@ -25,18 +39,17 @@ const Editor: React.FC<EditorProps> = ({ diagramId }) => {
 
   useEffect(() => {
     const loadDiagram = async () => {
-      const diagram = await loadUserDiagram(diagramId);
+      const diagram = await loadUserDiagram();
       if (diagram) {
         setBoxes(diagram.boxes);
         setConnectors(diagram.connectors);
       }
     };
     loadDiagram();
-  }, [diagramId]);
+  }, []);
 
   const handleSave = async () => {
-    await saveDiagram(diagramId, { boxes, connectors });
-    toast.success('Diagram saved successfully');
+    await saveDiagram({ boxes, connectors });
   };
 
   const handleAddBox = (isInterface: boolean = false) => {
@@ -145,7 +158,7 @@ const Editor: React.FC<EditorProps> = ({ diagramId }) => {
     >
       <Button
         onClick={handleExport}
-        className="fixed top-4 left-64 z-50"
+        className="fixed top-4 left-4 z-50"
         variant="outline"
         size="sm"
       >
@@ -155,14 +168,14 @@ const Editor: React.FC<EditorProps> = ({ diagramId }) => {
 
       <EditorToolbar
         onSave={handleSave}
-        onAddBox={(isInterface) => handleAddBox(isInterface)}
+        onAddBox={handleAddBox}
         isConnectorMode={isConnectorMode}
         onToggleConnectorMode={() => {
           setIsConnectorMode(!isConnectorMode);
           setPendingConnection(null);
         }}
         selectedRelationType={selectedRelationType}
-        onRelationTypeChange={(type: RelationType) => setSelectedRelationType(type)}
+        onRelationTypeChange={setSelectedRelationType}
       />
 
       {boxes.map(box => (

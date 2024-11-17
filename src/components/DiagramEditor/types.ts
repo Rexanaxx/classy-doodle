@@ -22,7 +22,6 @@ export interface Box {
   attributes: BoxItem[];
   methods: BoxItem[];
   position: { x: number; y: number };
-  isInterface?: boolean;
 }
 
 export interface Connector {
@@ -32,11 +31,6 @@ export interface Connector {
   startPoint: { x: number; y: number };
   endPoint: { x: number; y: number };
   type: RelationType;
-}
-
-export interface DiagramData {
-  boxes: Box[];
-  connectors: Connector[];
 }
 
 export const getAccessModifierSymbol = (modifier: AccessModifier): string => {
