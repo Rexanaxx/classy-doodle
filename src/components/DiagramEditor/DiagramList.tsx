@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 
 interface DiagramListProps {
   onSelectDiagram: (diagramId: string) => void;
@@ -11,23 +12,35 @@ interface DiagramListProps {
 }
 
 const DiagramList: React.FC<DiagramListProps> = ({ onSelectDiagram, selectedDiagramId }) => {
+  const { user } = useAuth();
+
   const { data: diagrams, isLoading } = useQuery({
-    queryKey: ['diagrams'],
+    queryKey: ['diagrams', user?.id],
     queryFn: async () => {
+      if (!user) throw new Error('User not authenticated');
+      
       const { data, error } = await supabase
         .from('diagrams')
         .select('*')
+        .eq('user_id', user.id)
         .order('updated_at', { ascending: false });
       
       if (error) throw error;
       return data;
     },
+    enabled: !!user,
   });
 
   const createNewDiagram = async () => {
+    if (!user) {
+      toast.error('Please sign in to create a diagram');
+      return;
+    }
+
     const { data, error } = await supabase
       .from('diagrams')
       .insert({
+        user_id: user.id,
         diagram_data: { boxes: [], connectors: [] }
       })
       .select()
