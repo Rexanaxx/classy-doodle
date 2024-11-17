@@ -1,40 +1,34 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import DiagramBox from './DiagramBox';
 import DiagramConnector from './DiagramConnector';
-import { RelationType, BoxItem } from './types';
 import { Button } from '@/components/ui/button';
 import { loadUserDiagram, saveDiagram } from '@/services/diagramService';
-import { Code, Download } from 'lucide-react';
+import { Code, Download, Type } from 'lucide-react';
 import JsonDialog from './JsonDialog';
 import EditorToolbar from './EditorToolbar';
 import * as htmlToImage from 'html-to-image';
 import { toast } from 'sonner';
-
-interface Box {
-  id: string;
-  title: string;
-  attributes: BoxItem[];
-  methods: BoxItem[];
-  position: { x: number; y: number };
-  isInterface?: boolean;
-}
-
-interface Connector {
-  id: string;
-  startBoxId: string;
-  endBoxId: string;
-  startPoint: { x: number; y: number };
-  endPoint: { x: number; y: number };
-  type: RelationType;
-}
+import { useEditorState } from './EditorState';
+import DraggableText from './DraggableText';
 
 const Editor: React.FC = () => {
-  const [boxes, setBoxes] = useState<Box[]>([]);
-  const [connectors, setConnectors] = useState<Connector[]>([]);
-  const [isConnectorMode, setIsConnectorMode] = useState(false);
-  const [pendingConnection, setPendingConnection] = useState<string | null>(null);
-  const [selectedRelationType, setSelectedRelationType] = useState<RelationType>('association');
-  const [isJsonDialogOpen, setIsJsonDialogOpen] = useState(false);
+  const {
+    boxes,
+    setBoxes,
+    connectors,
+    setConnectors,
+    textFields,
+    setTextFields,
+    isConnectorMode,
+    setIsConnectorMode,
+    pendingConnection,
+    setPendingConnection,
+    selectedRelationType,
+    setSelectedRelationType,
+    isJsonDialogOpen,
+    setIsJsonDialogOpen,
+  } = useEditorState();
+
   const editorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -147,6 +141,24 @@ const Editor: React.FC = () => {
     }
   };
 
+  const handleAddTextField = () => {
+    const newTextField = {
+      id: `text-${Date.now()}`,
+      position: { x: 100, y: 100 },
+    };
+    setTextFields([...textFields, newTextField]);
+  };
+
+  const handleTextFieldMove = (id: string, newPosition: { x: number; y: number }) => {
+    setTextFields(textFields.map(field => 
+      field.id === id ? { ...field, position: newPosition } : field
+    ));
+  };
+
+  const handleTextFieldDelete = (id: string) => {
+    setTextFields(textFields.filter(field => field.id !== id));
+  };
+
   return (
     <div
       ref={editorRef}
@@ -202,15 +214,34 @@ const Editor: React.FC = () => {
         />
       ))}
 
-      <Button
-        onClick={() => setIsJsonDialogOpen(true)}
-        className="fixed bottom-4 right-4 z-50"
-        variant="outline"
-        size="sm"
-      >
-        <Code className="w-4 h-4 mr-2" />
-        Show JSON
-      </Button>
+      {textFields.map(field => (
+        <DraggableText
+          key={field.id}
+          id={field.id}
+          position={field.position}
+          onMove={handleTextFieldMove}
+          onDelete={handleTextFieldDelete}
+        />
+      ))}
+
+      <div className="fixed bottom-4 right-4 z-50 flex gap-2">
+        <Button
+          onClick={handleAddTextField}
+          variant="outline"
+          size="sm"
+        >
+          <Type className="w-4 h-4 mr-2" />
+          Add Text
+        </Button>
+        <Button
+          onClick={() => setIsJsonDialogOpen(true)}
+          variant="outline"
+          size="sm"
+        >
+          <Code className="w-4 h-4 mr-2" />
+          Show JSON
+        </Button>
+      </div>
 
       <JsonDialog
         isOpen={isJsonDialogOpen}
