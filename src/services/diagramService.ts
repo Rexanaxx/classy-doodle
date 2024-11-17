@@ -13,13 +13,24 @@ export async function loadUserDiagram(diagramId: string): Promise<DiagramData | 
     return null;
   }
 
-  return data?.diagram_data as DiagramData;
+  // Ensure the data matches the DiagramData interface structure
+  const diagramData = data?.diagram_data as any;
+  if (diagramData && Array.isArray(diagramData.boxes) && Array.isArray(diagramData.connectors)) {
+    return diagramData as DiagramData;
+  }
+  
+  return null;
 }
 
 export async function saveDiagram(diagramId: string, data: DiagramData): Promise<void> {
   const { error } = await supabase
     .from('diagrams')
-    .update({ diagram_data: data as any })
+    .update({ 
+      diagram_data: {
+        boxes: data.boxes,
+        connectors: data.connectors
+      }
+    })
     .eq('id', diagramId);
 
   if (error) {
